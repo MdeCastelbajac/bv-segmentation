@@ -24,7 +24,7 @@ filenames = [
 
 def read_czi(czi_path, idx, crop_dict):
     # read czi file
-    path = os.path.join(czi_path, filenames[idx][0], filenames[idx][-1]+".jpg")
+    path = os.path.join(czi_path, filenames[idx][0]+"_"+filenames[idx][-1]+".jpg")
     img = Image.open(path)
     im = np.asarray(img).astype(float) 
    
@@ -108,10 +108,10 @@ def roi_mask(tif):
     # return the 'inside' : the shape mask
     for i in range(roi.shape[0]):
         mins = np.where(roi[i]== roi[i].min())[0]
-        roi[i, : mins[30]] = 0
-        roi[i, mins[30]:mins[-30]] = 1
-        roi[i, mins[-30]:] = 0
-    roi = binary_erosion(roi, disk(10))
+        roi[i, : mins[1]] = 0
+        roi[i, mins[1]:mins[-1]] = 1
+        roi[i, mins[-1]:] = 0
+    roi = binary_dilation(roi, disk(10))
     return roi
 
 def vessels_mask(tif):

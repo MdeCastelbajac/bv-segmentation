@@ -36,18 +36,34 @@ def single_image_plot(im, title=''):
     return
 
 
-def contour_plot(masks, bbs, im, tile_size=256):
-    fig, ax=plt.subplots(3,4,figsize=(20,10))
-    for i in range(12):
-        contour = measure.find_contours(masks[i])[0]
+def contour_plot(masks, bbs, im, tiles, tile_size=256):
+    fig, ax=plt.subplots(2,tiles//2,figsize=(20,10))
+    for i in range(0,tiles,2):
+        contour = measure.find_contours(masks[i])
+        contour2 = measure.find_contours(masks[i+1])
         bb = bbs[i]
+        bb2 = bbs[i+1]
         tile = im[bb[0]:bb[2], bb[1]:bb[3]]
-        x = contour[:,0]
-        y = contour[:,1]
-        ax[(i+1)//4-1, i%4].imshow(tile, cmap="gray")
-        ax[(i+1)//4-1, i%4].axis('off')
-        ax[(i+1)//4-1, i%4].plot(y, x, linewidth=3, color='indianred')
+        tile2 = im[bb2[0]:bb2[2], bb2[1]:bb2[3]]
+        ax[0, i%tiles//2].imshow(tile, cmap="gray")
+        ax[1, i%tiles//2].imshow(tile2, cmap="gray")
+        ax[1, i%tiles//2].axis('off')
+        ax[0, i%tiles//2].axis('off')
+        if contour != []:
+          contour = contour[0]
+          x = contour[:,0]
+          y = contour[:,1]
+          ax[0, i%tiles//2].plot(y, x, linewidth=3, color='indianred')
+        if contour2 != []:
+          contour2 = contour2[0]
+          x2 = contour2[:,0]
+          y2 = contour2[:,1]
+          ax[1, i%tiles//2].plot(y2, x2, linewidth=3, color='indianred')
+       
+       
+       
     plt.show()
+    
     return
     
 def plotChannels(c1, c2, c3):
