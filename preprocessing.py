@@ -30,14 +30,14 @@ def read_czi(czi_path, idx, crop_dict):
    
     # split channels 
     _, g, _=splitChannels( im )
-    h, _, _=splitChannels( convertHSV(img) )
+    _, s, _=splitChannels( convertHSV(img) )
     
     # crop 
     bb = crop_dict[filenames[idx]]['czi']
     g = g[bb['1']:bb['2'], bb['3']:bb['4']]
-    h = h[bb['1']:bb['2'], bb['3']:bb['4']]
+    s = s[bb['1']:bb['2'], bb['3']:bb['4']]
     im = im[bb['1']:bb['2'], bb['3']:bb['4']]
-    return im, g, h 
+    return im, g, s
 
 
 def read_tif(idx, crop_dict, czi_shape):

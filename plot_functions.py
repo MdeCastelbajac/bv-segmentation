@@ -11,18 +11,19 @@ def  preprocessing_plot(tif, g, h, roi, vessels, clipped_g, clipped_h):
     ax[1,0].imshow(h,cmap='gray')
     ax[1,0].axis('off')
     ax[1,0].title.set_text('hue channel')
-    ax[0,1].imshow(roi,cmap='gray')
+    ax[0,1].imshow(clipped_g,cmap='gray')
     ax[0,1].axis('off')
-    ax[0,1].title.set_text('RoI mask')
-    ax[1,1].imshow(vessels,cmap='gray')
+    ax[0,1].title.set_text('clipped G channel')
+    ax[1,1].imshow(clipped_h,cmap='gray')
     ax[1,1].axis('off')
-    ax[1,1].title.set_text('Vessels mask')
-    ax[0,2].imshow(clipped_g,cmap='gray')
+    ax[1,1].title.set_text('clipped S channel')
+    ax[0,2].imshow(roi,cmap='gray')
     ax[0,2].axis('off')
-    ax[0,2].title.set_text('clipped green channel')
-    ax[1,2].imshow(clipped_h,cmap='gray')
+    ax[0,2].title.set_text('RoI mask')
+    ax[1,2].imshow(vessels,cmap='gray')
     ax[1,2].axis('off')
-    ax[1,2].title.set_text('clipped hue channel')
+    ax[1,2].title.set_text('Vessels mask')
+
  
     plt.show()
     return
@@ -36,7 +37,7 @@ def single_image_plot(im, title=''):
     return
 
 
-def contour_plot(masks, bbs, im, tiles, tile_size=256):
+def contour_plot(masks, bbs, tif, im, tiles):
     fig, ax=plt.subplots(2,tiles//2,figsize=(20,10))
     for i in range(0,tiles,2):
         contour = measure.find_contours(masks[i])
@@ -45,20 +46,25 @@ def contour_plot(masks, bbs, im, tiles, tile_size=256):
         bb2 = bbs[i+1]
         tile = im[bb[0]:bb[2], bb[1]:bb[3]]
         tile2 = im[bb2[0]:bb2[2], bb2[1]:bb2[3]]
-        ax[0, i%tiles//2].imshow(tile, cmap="gray")
-        ax[1, i%tiles//2].imshow(tile2, cmap="gray")
+        a = tif[bb[0]:bb[2], bb[1]:bb[3]]
+        a2 = tif[bb2[0]:bb2[2], bb2[1]:bb2[3]]
+        # ax[0, i%tiles//2].imshow(a, cmap='bone', alpha=0.5)
+        # ax[1, i%tiles//2].imshow(a2, cmap='bone', alpha=0.5)
+        ax[0, i%tiles//2].imshow(tile.astype('int'),alpha=0.8)
+        ax[1, i%tiles//2].imshow(tile2.astype('int'),alpha=0.8)
+ 
         ax[1, i%tiles//2].axis('off')
         ax[0, i%tiles//2].axis('off')
         if contour != []:
           contour = contour[0]
           x = contour[:,0]
           y = contour[:,1]
-          ax[0, i%tiles//2].plot(y, x, linewidth=3, color='indianred')
+          ax[0, i%tiles//2].plot(y, x, linewidth=2, color='indianred')
         if contour2 != []:
           contour2 = contour2[0]
           x2 = contour2[:,0]
           y2 = contour2[:,1]
-          ax[1, i%tiles//2].plot(y2, x2, linewidth=3, color='indianred')
+          ax[1, i%tiles//2].plot(y2, x2, linewidth=2, color='indianred')
        
        
        
