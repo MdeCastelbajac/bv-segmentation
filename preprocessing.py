@@ -1,19 +1,20 @@
-from utils import *
-from tiles import *
+from utils import splitChannels, convertHSV, imadjust
 from aicspylibczi import *
 from PIL import Image
 import numpy as np
 import os 
+from tqdm import tqdm
 from skimage.transform import resize
-import matplotlib.pyplot as plt
-import pickle
 import rasterio
 import rasterio.features
 import rasterio.warp
 import json 
-from skimage.morphology import binary_dilation, binary_erosion
-from plot_functions import single_image_plot
+from skimage.morphology import binary_dilation, binary_erosion, disk
 import logging
+
+# this library contains functions used to prepare CZI and TIFF data 
+# they are ordered given their use case.
+
 
 filenames = [
     '0_6',
@@ -27,7 +28,6 @@ def read_czi(czi_path, idx, crop_dict):
     path = os.path.join(czi_path, filenames[idx][0]+"_"+filenames[idx][-1]+".jpg")
     img = Image.open(path)
     im = np.asarray(img).astype(float) 
-   
     # split channels 
     _, g, _=splitChannels( im )
     _, s, _=splitChannels( convertHSV(img) )
@@ -35,8 +35,12 @@ def read_czi(czi_path, idx, crop_dict):
     # crop 
     bb = crop_dict[filenames[idx]]['czi']
     g = g[bb['1']:bb['2'], bb['3']:bb['4']]
+    g = imadjust(g, 0, 255)
     s = s[bb['1']:bb['2'], bb['3']:bb['4']]
+    s = imadjust(s, 0, 255)
     im = im[bb['1']:bb['2'], bb['3']:bb['4']]
+
+
     return im, g, s
 
 
@@ -60,15 +64,6 @@ def read_tif(idx, crop_dict, czi_shape):
     tif = np.where(tif == 255,0,tif)
     
     return tif
-
-def exclusion_mask():
-    red  = np.where( red <= red.min()+100, 1, 0 )
-    blue = np.where( blue <= blue.min()+100, 1, 0 )
-    green  = np.where( green <= green.min()+100, 1, 0 )
-    ex = np.logical_and(red, np.logical_and( blue, green ))
-    return None
-
-
 
 def get_color(im, color='purple'):
     '''select annotations given their color on the tif file
@@ -101,6 +96,7 @@ def get_color(im, color='purple'):
 
 
 def roi_mask(tif):
+    ''' select ROI mask ''' 
     # roi annotation in 'green' : contours
     roi = get_color(tif, color='green')
     roi = binary_dilation(roi, disk(20))
@@ -111,7 +107,7 @@ def roi_mask(tif):
         roi[i, : mins[1]] = 0
         roi[i, mins[1]:mins[-1]] = 1
         roi[i, mins[-1]:] = 0
-    roi = binary_dilation(roi, disk(10))
+    roi = binary_dilation(roi, disk(5))
     return roi
 
 def vessels_mask(tif):
@@ -124,3 +120,63 @@ def apply_mask(im, mask, bg=0):
     '''bg = unselected area color value 0:255'''
     res = np.where(mask, im, bg)
     return res
+
+
+
+
+def getScene( czi, scene=0, scale_factor=0.1 ):
+    '''returns array from tiles of the scene in the czi file'''
+    boundingBoxes=czi.get_all_mosaic_tile_bounding_boxes(S=scene)
+    minx=float('inf')
+    miny=float('inf')
+    maxx=-float('inf')
+    maxy=-float('inf')
+    for key in boundingBoxes:
+        boundingBox=boundingBoxes[key]
+        x,y,w,h = boundingBox.x, boundingBox.y, boundingBox.w, boundingBox.h
+        minx = min(minx, x)
+        maxx = max(maxx, x+w)
+        miny = min(miny, y)
+        maxy = max(maxy, y+h)
+    scene=czi.read_mosaic(C=0, region=[minx,miny,maxx-minx,maxy-miny], scale_factor=scale_factor)
+    
+    return scene[0, :, :, :]
+
+def splitCziInScenes( path, fileNumber=0 ):
+    """saves each czi mosaic scene as its own image.
+       path (str), savePath (str), fileNumber (int) -> None
+    """
+    # Variables 
+    fileNumber=str(fileNumber)
+    scenesPath=os.path.join('./prat/scenes/', fileNumber)
+    czi=CziFile( path )
+    sceneNumber=czi.get_dims_shape()[-1]['S'][1]
+    
+    for s in tqdm(range(sceneNumber)):
+        scene = getScene( czi, scene=s, scale_factor=0.1 )
+        scene = bgrToRgb( scene )
+        saveImg( scene, scenesPath, id=s )
+
+    return 
+
+def saveImg( arr, path, id=0 ):
+    '''saves array to path as jpeg'''
+    img = Image.fromarray(arr)
+    img.save(os.path.join(path,str(id)+".jpg"))
+
+
+def bgrToRgb( arr ):
+    return arr[:,:,::-1]
+
+def fillBackgroundG(im):
+    # find bg value
+    bgValue = 0
+    i=0
+    while im[i,i]==0 or im[i,i]==255 or im[i,i]!=im[i+1,i+1]:
+        i+=1
+    bgValue = im[i,i]
+    # fill with bg value
+    im=np.where(im<=50, bgValue, im)
+    im=np.where(im>=bgValue+10, bgValue, im)
+    return im, bgValue
+

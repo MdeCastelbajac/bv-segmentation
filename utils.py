@@ -25,11 +25,6 @@ def splitChannels(image):
     c3=image[:,:,2]
     return c1, c2, c3
 
-    
-def load_json(): 
-    with open("crop.json", "r") as io_str:
-        data = json.load(io_str)
-    return(data)
 
 def get_vessels_bounding_box(contours):
     bbs=[]
@@ -37,83 +32,24 @@ def get_vessels_bounding_box(contours):
         bbs.append([contour[:,0].min(), contour[:,1].min(),contour[:,0].max(),contour[:,1].max()])
     return np.array(bbs).astype('int')
 
+def crop_tile(bb, g, size):
+    center = bb[0]+(bb[2]-bb[0])//2, bb[1]+(bb[3]-bb[1])//2
+    xmin = max(0,center[0]-size//2)
+    xmax = min(center[0]+size//2, g.shape[0])
+    ymin = max(0, center[1]-size//2)
+    ymax = min(center[1]+size//2, g.shape[1])
+    return g[xmin:xmax, ymin:ymax], [xmin, ymin,xmax,ymax]
 
-def binaryThreshold(image, threshold=127, highPass=True):
-    if highPass:
-        return np.where( image>threshold, 1, 0 )
-    return np.where( image<=threshold, 1, 0 )
-
-def invertImage(image):
-    return np.max(image)-image
-
-# should be for a given component, if several
-def edgeLength(image):
-    return np.size( measure.find_contours( image, 0 ))
-
-def surface(image):
-    return np.shape( np.where(image) )[1]
-
-def smoothness(image):
-    return surface(image)/edgeLength(image)
-
-def asf( image, N=3 ):
-    for i in range(N):
-        strel=disk(N+1)
-        image=opening( closing( image, strel ), strel)
-    return image
-
-def bgrToRgb( arr ):
-    return arr[:,:,::-1]
     
-def saveImg( arr, path, id=0 ):
-    '''saves array to path as jpeg'''
-    img = Image.fromarray(arr)
-    img.save(os.path.join(path,str(id)+".jpg"))
+def imadjust(x,c,d,gamma=1):
+    # Similar to imadjust in MATLAB.
+    # Converts an image range from [a,b] to [c,d].
+    # The Equation of a line can be used for this transformation:
+    #   y=((d-c)/(b-a))*(x-a)+c
+    # However, it is better to use a more generalized equation:
+    #   y=((x-a)/(b-a))^gamma*(d-c)+c
+    # If gamma is equal to 1, then the line equation is used.
+    # When gamma is not equal to 1, then the transformation is not linear.
 
-def getScene( czi, scene=0, scale_factor=0.1 ):
-    '''returns array from tiles of the scene in the czi file'''
-    boundingBoxes=czi.get_all_mosaic_tile_bounding_boxes(S=scene)
-    minx=float('inf')
-    miny=float('inf')
-    maxx=-float('inf')
-    maxy=-float('inf')
-    for key in boundingBoxes:
-        boundingBox=boundingBoxes[key]
-        x,y,w,h = boundingBox.x, boundingBox.y, boundingBox.w, boundingBox.h
-        minx = min(minx, x)
-        maxx = max(maxx, x+w)
-        miny = min(miny, y)
-        maxy = max(maxy, y+h)
-    scene=czi.read_mosaic(C=0, region=[minx,miny,maxx-minx,maxy-miny], scale_factor=scale_factor)
-    
-    return scene[0, :, :, :]
-
-def splitCziInScenes( path, fileNumber=0 ):
-    """saves each czi mosaic scene as its own image.
-       path (str), savePath (str), fileNumber (int) -> None
-    """
-    # Variables 
-    fileNumber=str(fileNumber)
-    scenesPath=os.path.join('./prat/scenes/', fileNumber)
-    czi=CziFile( path )
-    sceneNumber=czi.get_dims_shape()[-1]['S'][1]
-    
-    for s in tqdm(range(sceneNumber)):
-        scene = getScene( czi, scene=s, scale_factor=0.1 )
-        scene = bgrToRgb( scene )
-        saveImg( scene, scenesPath, id=s )
-
-    return 
-
-
-def fillBackgroundG(im):
-    # find bg value
-    bgValue = 0
-    i=0
-    while im[i,i]==0 or im[i,i]==255 or im[i,i]!=im[i+1,i+1]:
-        i+=1
-    bgValue = im[i,i]
-    # fill with bg value
-    im=np.where(im<=50, bgValue, im)
-    im=np.where(im>=bgValue+10, bgValue, im)
-    return im, bgValue
+    y = (((x - x.min()) / (x.max() - x.min())) ** gamma) * (d - c) + c
+    return y
