@@ -40,24 +40,25 @@ def closed_mask(bb, tile_g, tile_s, t=100):
 
 def open_mask(bb, tile_g):
 
-    tile_g_ = morphology.area_opening(tile_g, 2000)
+    tile_g_ = morphology.area_opening(tile_g, 1000)
     mask = asf(tile_g, N=50, size=3) 
-    mask = np.where(mask>=mask.max()-50 ,1,0)
+    mask = morphology.area_opening(mask, 1000)
+    mask = np.where(mask>=(mask.max()-10),1,0)
 
-    mask = segmentation.morphological_geodesic_active_contour(tile_g, 10, mask,smoothing=1, balloon=0.5)
+    mask = segmentation.morphological_geodesic_active_contour(255-tile_g_,20, mask,smoothing=1, balloon=0.2)
+    mask =morphology.area_opening(mask, 500)
+    out =morphology.area_opening(mask, 5000)
+    mask = np.logical_and(mask, 1-out)
 
-    # mask = morphology.binary_dilation(mask, morphology.disk(2))
-    # mask = morphology.binary_erosion(mask, morphology.disk(2))
-    # mask = morphology.binary_dilation(mask, morphology.disk(2))
-    # mask = morphology.binary_dilation(mask, morphology.disk(2))
-    # mask = morphology.binary_erosion(mask, morphology.disk(2))
-    # mask = morphology.binary_dilation(mask, morphology.disk(2))
-
-    reconstructed =morphology.area_opening(mask, 2000)
-    out =morphology.area_opening(mask, 8000)
-    reconstructed = np.logical_and(reconstructed, 1-out)
-
-    return reconstructed 
+    mask = morphology.binary_dilation(mask, morphology.disk(2))
+    mask = morphology.binary_erosion(mask, morphology.disk(2))
+    mask = morphology.binary_dilation(mask, morphology.disk(2))
+    mask = morphology.binary_dilation(mask, morphology.disk(2))
+    
+    n = len(measure.find_contours(mask))
+    if n > 3:
+      mask = np.zeros(mask.shape)
+    return mask 
 
 
 # Two functions to avoid segmenting the same vessels twice, 
