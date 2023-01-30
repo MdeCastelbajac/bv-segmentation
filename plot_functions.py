@@ -38,12 +38,12 @@ def plot_contours(full_mask, vessels, im, color='indianred',figsize=(40,40)):
     for g in gt:
       x = g[:,0]
       y = g[:,1]
-      plt.plot(y, x, linewidth=5, color='olive')
+      plt.plot(y, x, linewidth=2, color='olive')
     plt.axis('off')
     for c in contour:
       x = c[:,0]
       y = c[:,1]
-      plt.plot(y, x, linewidth=5, color=color)
+      plt.plot(y, x, linewidth=2, color=color)
    
     plt.show()
     # fig, ax = plt.subplots(rows,cols, figsize=figsize)
