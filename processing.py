@@ -19,6 +19,13 @@ def asf(img, N=3, size=1):
 
   return im 
 
+def opening_rec(im, size):
+  im2 = morphology.opening(im, morphology.disk(size))
+  return morphology.reconstruction(im2,im, method='dilation')
+
+def closing_rec(im, size):
+  im2 = morphology.closing(im, morphology.disk(size))
+  return morphology.reconstruction(im2, im, method='erosion')
 
 def closed_mask(bb, tile_g, tile_s, t=100):
     # im = np.where(tile_s >= t, 1, 0)
@@ -39,25 +46,26 @@ def closed_mask(bb, tile_g, tile_s, t=100):
 
 
 def open_mask(bb, tile_g):
-
-    tile_g_ = morphology.area_opening(tile_g, 1000)
-    mask = asf(tile_g, N=50, size=3) 
-    mask = morphology.area_opening(mask, 1000)
+    tile_g = morphology.closing(tile_g, morphology.disk(2))
+    # mask = asf(tile_g, N=50, size=3) 
+    mask=opening_rec(tile_g, 10)
+    
+    # mask = morphology.area_opening(mask, 1000)
     mask = np.where(mask>=(mask.max()-10),1,0)
-
-    mask = segmentation.morphological_geodesic_active_contour(255-tile_g_,20, mask,smoothing=1, balloon=0.2)
-    mask =morphology.area_opening(mask, 500)
-    out =morphology.area_opening(mask, 5000)
+    plt.imshow(mask, cmap='gray')
+    plt.show()
+    # mask = segmentation.morphological_geodesic_active_contour(255-tile_g,20, mask,smoothing=1, balloon=0.2)
+    mask =morphology.area_opening(mask, 1000)
+    out =morphology.area_opening(mask, 8000)
     mask = np.logical_and(mask, 1-out)
-
-    mask = morphology.binary_dilation(mask, morphology.disk(2))
-    mask = morphology.binary_erosion(mask, morphology.disk(2))
-    mask = morphology.binary_dilation(mask, morphology.disk(2))
-    mask = morphology.binary_dilation(mask, morphology.disk(2))
+   
+    mask = morphology.binary_closing(mask,morphology.disk(5))
+    plt.imshow(mask, cmap='gray')
+    plt.show()
     
     n = len(measure.find_contours(mask))
     if n > 3:
-      mask = np.zeros(mask.shape)
+      mask = segmentation.clear_border(mask)
     return mask 
 
 

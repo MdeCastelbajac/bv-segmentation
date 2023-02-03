@@ -41,7 +41,7 @@ def read_czi(czi_path, idx, crop_dict):
     s = imadjust(s, 0, 255)
     im = im[bb['1']:bb['2'], bb['3']:bb['4']]
     for i in range(3):
-      
+       im[:,:,i] = imadjust(im[:,:,i], 0, 255)
     r = r[bb['1']:bb['2'], bb['3']:bb['4']]
     r = imadjust(r, 0, 255)
     return im, g, s, r
