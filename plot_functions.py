@@ -30,20 +30,20 @@ def implot(images,labels,cmap='gray',figsize=(20,10)):
 
 def plot_contours(full_mask, vessels, im, color='indianred',figsize=(40,40)):
     contour = measure.find_contours(full_mask)
-    gt = measure.find_contours(vessels)
+    # gt = measure.find_contours(vessels)
     im = im.astype('int')
     # global plot
     plt.figure(figsize=figsize)
     plt.imshow(im)
-    for g in gt:
-      x = g[:,0]
-      y = g[:,1]
-      plt.plot(y, x, linewidth=2, color='olive')
+    # for g in gt:
+      # x = g[:,0]
+      # y = g[:,1]
+      # plt.plot(y, x, linewidth=2, color='olive')
     plt.axis('off')
     for c in contour:
       x = c[:,0]
       y = c[:,1]
-      plt.plot(y, x, linewidth=2, color=color)
+      plt.plot(y, x, linewidth=5, color=color)
    
     plt.show()
     # fig, ax = plt.subplots(rows,cols, figsize=figsize)
