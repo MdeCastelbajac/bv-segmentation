@@ -26,7 +26,7 @@ def splitChannels(image):
     return c1, c2, c3
 
 
-def get_vessels_bounding_box(contours):
+def get_bounding_box_from_contour(contours):
     bbs=[]
     for contour in contours:
         bbs.append([contour[:,0].min(), contour[:,1].min(),contour[:,0].max(),contour[:,1].max()])
@@ -42,14 +42,6 @@ def crop_tile(bb, g, size):
 
     
 def imadjust(x,c,d,gamma=1):
-    # Similar to imadjust in MATLAB.
-    # Converts an image range from [a,b] to [c,d].
-    # The Equation of a line can be used for this transformation:
-    #   y=((d-c)/(b-a))*(x-a)+c
-    # However, it is better to use a more generalized equation:
-    #   y=((x-a)/(b-a))^gamma*(d-c)+c
-    # If gamma is equal to 1, then the line equation is used.
-    # When gamma is not equal to 1, then the transformation is not linear.
-
+    ''' normalizes the image between c and d '''
     y = (((x - x.min()) / (x.max() - x.min())) ** gamma) * (d - c) + c
     return y

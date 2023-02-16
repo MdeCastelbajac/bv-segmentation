@@ -1,20 +1,20 @@
 import matplotlib.pyplot as plt
 from skimage import measure
 import numpy as np
-from utils import get_vessels_bounding_box, crop_tile
+from utils import get_bounding_box_from_contour, crop_tile
 
 
 def implot(images,labels,cmap='gray',figsize=(20,10)):
-
-  rows = int(np.sqrt(len(images)))
-  if rows==1:# single image plot
+  # single image plot
+  if type(images) == np.ndarray:
     plt.figure(figsize=figsize)
-    fig = plt.imshow(images[0], cmap=cmap)
+    fig = plt.imshow(images, cmap=cmap)
     plt.axis('off')
-    plt.title(labels[0])
+    plt.title(labels)
     plt.show()
     return
   # multi image plot
+  rows = int(np.sqrt(len(images)))
   cols = len(images)//rows
   fig, ax = plt.subplots(rows,cols, figsize=figsize)
   for j in range(cols):
