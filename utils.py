@@ -11,8 +11,8 @@ from tqdm import tqdm
 import json
 
 
-def load_json(): 
-    with open("crop.json", "r") as io_str:
+def load_json(filename='crop.json'): 
+    with open(filename, "r") as io_str:
         data = json.load(io_str)
     return(data)
 
@@ -33,11 +33,12 @@ def get_bounding_box_from_contour(contours):
     return np.array(bbs).astype('int')
 
 def crop_tile(bb, g, size):
+    
     center = bb[0]+(bb[2]-bb[0])//2, bb[1]+(bb[3]-bb[1])//2
-    xmin = max(0,center[0]-size//2)
-    xmax = min(center[0]+size//2, g.shape[0])
-    ymin = max(0, center[1]-size//2)
-    ymax = min(center[1]+size//2, g.shape[1])
+    xmin = max(0,center[0]-(size//2))
+    xmax = min(center[0]+(size//2), g.shape[0])
+    ymin = max(0, center[1]-(size//2))
+    ymax = min(center[1]+(size//2), g.shape[1])
     return g[xmin:xmax, ymin:ymax], [xmin, ymin,xmax,ymax]
 
     

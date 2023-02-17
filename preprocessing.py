@@ -23,22 +23,17 @@ def read_czi(czi_path, idx, crop_dict):
     img = Image.open(path)
     im = np.asarray(img).astype(float) 
     # split channels 
-    r, g, b=splitChannels( im )
-    _, s, _=splitChannels( convertHSV(img) )
+    _, g, _=splitChannels( im )
     # crop 
     bb = crop_dict[filenames[idx]]['czi']
     g = g[bb['1']:bb['2'], bb['3']:bb['4']]
     g = imadjust(g, 0, 255)
-    s = s[bb['1']:bb['2'], bb['3']:bb['4']]
-    s = imadjust(s, 0, 255)
     im = im[bb['1']:bb['2'], bb['3']:bb['4']]
     # normalize
     for i in range(3):
        im[:,:,i] = imadjust(im[:,:,i], 0, 255)
-    r = r[bb['1']:bb['2'], bb['3']:bb['4']]
-    r = imadjust(r, 0, 255)
 
-    return im, g, s, r
+    return im, g
 
 
 def read_tif(idx, crop_dict, czi_shape):
@@ -73,15 +68,14 @@ def get_color(im, color='purple'):
     red = np.where(r==max_red, 1, 0)
     blue = np.where(b==max_blue, 1, 0)
     green = np.where(g==max_green, 1, 0)
-    match color:
+    if color == 'green':
       # Get RoI
-      case 'green':
         return np.logical_and(1-blue, np.logical_and(1-red, green))
       # Get Vessels
-      case 'purple':
+    elif color == 'purple':
         return np.logical_and(red, np.logical_and(blue,1-green))
       # Get CT-Lymphocytes
-      case 'yellow':
+    elif color == 'yellow':
         return np.logical_and(red, np.logical_and(green, 1-blue))
     
     return None

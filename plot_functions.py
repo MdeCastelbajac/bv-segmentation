@@ -4,7 +4,7 @@ import numpy as np
 from utils import get_bounding_box_from_contour, crop_tile
 
 
-def implot(images,labels,cmap='gray',figsize=(20,10)):
+def implot(images,labels,cmap='gray',figsize=(20,10), rows=2):
   # single image plot
   if type(images) == np.ndarray:
     plt.figure(figsize=figsize)
@@ -14,9 +14,24 @@ def implot(images,labels,cmap='gray',figsize=(20,10)):
     plt.show()
     return
   # multi image plot
-  rows = int(np.sqrt(len(images)))
   cols = len(images)//rows
   fig, ax = plt.subplots(rows,cols, figsize=figsize)
+  if cols == 1:
+    for i in range(rows):
+      idx=i
+      ax[i].set_title(labels[idx])
+      ax[i].imshow(images[idx],cmap=cmap)
+      ax[i].axis('off')
+    plt.show()
+    return
+  elif rows == 1:
+    for i in range(cols):
+      idx=i
+      ax[i].set_title(labels[idx])
+      ax[i].imshow(images[idx],cmap=cmap)
+      ax[i].axis('off')
+    plt.show()
+    return
   for j in range(cols):
     for i in range(rows):
       idx=i+j*rows
@@ -28,37 +43,17 @@ def implot(images,labels,cmap='gray',figsize=(20,10)):
   return
 
 
-def plot_contours(full_mask, vessels, im, color='indianred',figsize=(40,40)):
-    contour = measure.find_contours(full_mask)
-    # gt = measure.find_contours(vessels)
-    im = im.astype('int')
-    # global plot
-    plt.figure(figsize=figsize)
-    plt.imshow(im)
-    # for g in gt:
-      # x = g[:,0]
-      # y = g[:,1]
-      # plt.plot(y, x, linewidth=2, color='olive')
+def plot_contours(vessels, im, color='indianred',figsize=(20,20)):
+    contours = [measure.find_contours(v) for v in vessels]
+    plt.figure( figsize=figsize )
+    plt.imshow(im.astype('int'))
     plt.axis('off')
-    for c in contour:
-      x = c[:,0]
-      y = c[:,1]
-      plt.plot(y, x, linewidth=5, color=color)
-   
+    for i in range(3):
+      contour = contours[i]
+      for c in contour:
+        x = c[:,0]
+        y = c[:,1]
+        plt.plot(y, x, linewidth=2, color=color[i])
     plt.show()
-    # fig, ax = plt.subplots(rows,cols, figsize=figsize)
-    # for j in range(cols):
-    #   for i in range(rows):
-    #     idx=i+j*rows
-    #     c = contour[idx]
-    #     bb = bbs[idx]
-    #     tile, new_bb = crop_tile(bb, im, tile_size)
-    #     ax[i,j].imshow(tile)
-
-    #     x = c[:,0]-new_bb[0]
-    #     y = c[:,1]-new_bb[1]
-    #     ax[i,j].plot(y, x, linewidth=2, color=color)
-    #     ax[i,j].axis('off')
-    # plt.show()
     return
     
