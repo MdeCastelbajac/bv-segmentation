@@ -7,9 +7,6 @@ from plot_functions import implot
 from skimage import segmentation, morphology, measure, filters
 
 
-# def opening_rec(im, size):
-#   im2 = morphology.opening(im, morphology.disk(size))
-#   return morphology.reconstruction(im2,im, method='dilation')
 
 def closing_rec(im, size):
   im2 = morphology.closing(im, morphology.disk(size))
@@ -57,12 +54,12 @@ def get_opened_vessels_mask( g, factor, min_area, max_area ):
       mask = morphology.binary_dilation(mask, morphology.disk(2))
       mask = morphology.binary_erosion(mask, morphology.disk(2))
     mask = morphology.binary_dilation(mask, morphology.disk(2))
-    # mask = segmentation.clear_border(mask)
+    mask = segmentation.clear_border(mask)
     return mask 
 
 
 
-def get_vessels_mask( bbs, g, tile_size=256, max_value=100, min_area=100, max_area=1000, max_hole=8000, factor=0.8):
+def get_vessels_mask( bbs, g, tile_size=256, max_value=100, min_area=100, max_area=1000, factor=0.8):
     ''' get all vessels masks ''' 
     closed_vessels = np.zeros(g.shape)
     opened_from_closed_vessels = np.zeros(g.shape)
@@ -71,7 +68,7 @@ def get_vessels_mask( bbs, g, tile_size=256, max_value=100, min_area=100, max_ar
     bbs = clear_bb_list(bbs, tile_size)
     for bb in tqdm(bbs):
         tile_g, new_bb = crop_tile(bb, g, tile_size)
-        closed, opened_from_closed = get_closed_vessels_mask( np.where(tile_g<=5,255,tile_g), max_value, min_area, max_area, max_hole )
+        closed, opened_from_closed = get_closed_vessels_mask( np.where(tile_g<=5,255,tile_g), max_value, min_area, max_area )
         opened = get_opened_vessels_mask( np.where(tile_g==255,0,tile_g), factor, min_area, max_area )
         
         closed_vessels[new_bb[0]:new_bb[2], new_bb[1]:new_bb[3]] = closed
