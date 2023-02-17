@@ -1,6 +1,6 @@
 ## AUTOMATED BLOOD VESSEL SEGMENTATION ON CD3-STAINED WSI
 
-Description
+A research project.
 
 #### DEPENDANCIES
 The built-in functions require `rasterio` and `aicspylibczi` libraries for `tif` and `czi` file management
