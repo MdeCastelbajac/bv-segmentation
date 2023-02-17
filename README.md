@@ -3,7 +3,7 @@
 Description
 
 #### DEPENDANCIES
-The built-in functions require `rasterio` and `acsifi...` for `tif` and `czi` file management
+The built-in functions require `rasterio` and `aicspylibczi` libraries for `tif` and `czi` file management
 
 #### How to use 
 The easiest way to use is to run the notebook.  
